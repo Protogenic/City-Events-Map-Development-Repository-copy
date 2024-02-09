@@ -1,9 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-from models import News
-from django.http import JsonResponse
+# from models import News
+# from django.http import JsonResponse
 import psycopg2
+
+# Сделаю ветку с django которая не работает друзья
 
 # conn = psycopg2.connect(host="localhost", dbname="nnru_reader", user="postgres", password="postgres")
 # cur = conn.cursor()
@@ -29,42 +31,42 @@ def check_response(url):
 
 
 # вот тут вообще не понял как это должно работать друзья
-def add_to_database(request):
-    if request.method == 'POST':
-        id = request.POST.get('id')
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        date = request.POST.get('date')
-        place = request.POST.get('place')
-        url = request.POST.get('url')
-        img = request.POST.get('img')
+# def add_to_database(request):
+#     if request.method == 'POST':
+#         id = request.POST.get('id')
+#         title = request.POST.get('title')
+#         description = request.POST.get('description')
+#         date = request.POST.get('date')
+#         place = request.POST.get('place')
+#         url = request.POST.get('url')
+#         img = request.POST.get('img')
+#
+#         new_data = News(id=id, title=title, description=description, date=date, place=place, url=url, img=img)
+#         new_data.save()
+#
+#         return JsonResponse({'message': 'Data added to database'})
+#     else:
+#         return JsonResponse({'error': 'Error'}, status=405)
 
-        new_data = News(id=id, title=title, description=description, date=date, place=place, url=url, img=img)
-        new_data.save()
 
-        return JsonResponse({'message': 'Data added to database'})
-    else:
-        return JsonResponse({'error': 'Error'}, status=405)
-
-
-def pass_news(id, title, description, date, place, url, img):
-    server = 'http://kerilserver.com/add_data/'  # адрес сервера Керила
-    news = {
-        'id': id,
-        'title': title,
-        'description': description,
-        'date': date,
-        'place': place,
-        'url': url,
-        'img': img
-    }
-
-    response = requests.post(server, data=news)
-    print(response.json())
+# def pass_news(id, title, description, date, place, url, img):
+#     server = 'http://kerilserver.com/add_data/'  # адрес сервера Керила
+#     news = {
+#         'id': id,
+#         'title': title,
+#         'description': description,
+#         'date': date,
+#         'place': place,
+#         'url': url,
+#         'img': img
+#     }
+#
+#     response = requests.post(server, data=news)
+#     print(response.json())
 
 def rbc():
-    url = 'https://nn.rbc.ru/nn/'
-    data = check_response(url)
+    site_url = 'https://nn.rbc.ru/nn/'
+    data = check_response(site_url)
     if data is None:
         return
 
@@ -75,15 +77,21 @@ def rbc():
         url = article.find('a', {'class': 'item__link rm-cm-item-link js-rm-central-column-item-link'}).get('href')
         img = get_after_find(article, 'img', 'src')
 
-        print(title, '\n', date, '\n', url, '\n', img, '\n\n\n')
-        pass_news(0, title, '', date, '', url, img)
+        response = requests.get(url)
+        news_data = BeautifulSoup(response.text, 'html.parser')
+        text = ''
+        if news_data.find('p') is not None:
+            text = news_data.find('p').text
+
+        print(title, '\n', text, '\n', date, '\n', url, '\n', img, '\n\n\n')
+        #pass_news(0, title, '', date, '', url, img)
 
 
 
 
 def nnru():
-    url = 'https://www.nn.ru/text/'
-    data = check_response(url)
+    site_url = 'https://www.nn.ru/text/'
+    data = check_response(site_url)
     if data is None:
         return
 
@@ -92,12 +100,19 @@ def nnru():
         tag = article.find('h2')
         if tag:
             title = tag.a['title']
+
         date = get_after_find(article, 'time', 'datetime')
         url = 'https://www.nn.ru/' + article.a['href']
         img = get_after_find(article, 'img', 'src')
 
-        print(title, '\n', date, '\n', url, '\n', img, '\n\n\n')
-        pass_news(0, title, '', date, '', url, img)
+        response = requests.get(url)
+        news_data = BeautifulSoup(response.text, 'html.parser')
+        text = ''
+        if news_data.find('div', {'class': 'qQq9J'}) is not None:
+            text = news_data.find('div', {'class': 'qQq9J'}).text
+
+        print(title, '\n', text, '\n', date, '\n', url, '\n', img, '\n\n\n')
+        #pass_news(0, title, '', date, '', url, img)
 
 
 
