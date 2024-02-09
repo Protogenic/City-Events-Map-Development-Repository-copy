@@ -32,29 +32,29 @@ def check_response(url):
 def add_to_database(request):
     if request.method == 'POST':
         id = request.POST.get('id')
-        text = request.POST.get('text')
+        title = request.POST.get('title')
+        description = request.POST.get('description')
         date = request.POST.get('date')
-        coord_x = request.POST.get('coord_x')
-        coord_y = request.POST.get('coord_y')
+        place = request.POST.get('place')
         url = request.POST.get('url')
         img = request.POST.get('img')
 
-        new_data = News(id=id, date=date, coord_x=coord_x, coord_y=coord_y, url=url, img=img)
+        new_data = News(id=id, title=title, description=description, date=date, place=place, url=url, img=img)
         new_data.save()
 
-        return JsonResponse({'message': 'Данные успешно добавлены в базу данных'})
+        return JsonResponse({'message': 'Data added to database'})
     else:
-        return JsonResponse({'error': 'Метод не разрешен'}, status=405)
+        return JsonResponse({'error': 'Error'}, status=405)
 
 
-def pass_news(id, text, date, coord_x, coord_y, url, img):
+def pass_news(id, title, description, date, place, url, img):
     server = 'http://kerilserver.com/add_data/'  # адрес сервера Керила
     news = {
-        'id': 0,
-        'text': text,
+        'id': id,
+        'title': title,
+        'description': description,
         'date': date,
-        'coord_x': 0.0,
-        'coord_y': 0.0,
+        'place': place,
         'url': url,
         'img': img
     }
@@ -76,7 +76,7 @@ def rbc():
         img = get_after_find(article, 'img', 'src')
 
         print(title, '\n', date, '\n', url, '\n', img, '\n\n\n')
-        pass_news(0, title, date, 0.0, 0.0, url, img)
+        pass_news(0, title, '', date, '', url, img)
 
 
 
@@ -97,7 +97,7 @@ def nnru():
         img = get_after_find(article, 'img', 'src')
 
         print(title, '\n', date, '\n', url, '\n', img, '\n\n\n')
-        pass_news(0, title, date, 0.0, 0.0, url, img)
+        pass_news(0, title, '', date, '', url, img)
 
 
 
