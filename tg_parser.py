@@ -1,5 +1,4 @@
 from telethon import TelegramClient, events
-
 from config import my_chat_id
 
 
@@ -10,8 +9,10 @@ def telegram_parser(session, api_id, api_hash, telegram_channels, check_ban_word
 
     @client.on(events.NewMessage(chats=telegram_channels))
     async def my_event_handler(event):
+        print(type(event.raw_text))
         one_line_text = event.raw_text.replace("\n", " ")
-        post = parse_func(one_line_text)
+        print(one_line_text)
+        post = await parse_func(one_line_text)
         await client.send_message(my_chat_id, post)
 
     return client
