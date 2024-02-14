@@ -16,10 +16,13 @@ def telegram_grabber(session, api_id, api_hash, telegram_channels=None, check_ba
             return
         message_link = f"https://t.me/{event.chat.username}/{event.id}"
         post = await parsing_func(new_text)
+        if post == "":
+            return
         post += '\n4)Источник: ' + message_link
         photo_path = ""
         if event.photo:
             photo = event.photo
             photo_path = await client.download_media(photo, file="downloaded_image.jpg")
         await send_message_func(post, photo_path)
+
     return client

@@ -13,7 +13,7 @@ prompt = """На русском языке:ё
     3) Переформулируйте информацию, предоставив более точный контекст и избегая лишних эмоциональных вставок.
     """
 
-tg_channels = [-1001941183965]
+tg_channels = [-1001941183965,-1001593578246,-1001080833375]
 session = "myGrab"
 amount_messages = 10
 loop = asyncio.new_event_loop()
@@ -25,17 +25,17 @@ posted_q = deque(maxlen=amount_messages)
 
 async def gpt_response(input_text):
     async with ShuttleAsyncClient(SHUTTLE_KEY, timeout=60) as shuttle:
-        #shuttle.base_url = "https://api.shuttleai.app"
         response = await shuttle.chat_completion(
-             model="gpt-3.5-turbo",
-             messages=[{"role":"user","content":input_text + prompt}],
-             stream=False,
-             plain=False,
-             internet=False,
-             max_tokens=100,
-             temperature=0.5,
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": input_text + prompt}],
+            stream=False,
+            plain=False,
+            internet=False,
+            max_tokens=100,
+            temperature=0.5,
         )
-        return response
+        return response['choices'][0]['message']['content']
+
 
 def filter_func(text):
     words = text.lower().split()
