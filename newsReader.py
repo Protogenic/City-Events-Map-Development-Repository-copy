@@ -2,6 +2,7 @@ import asyncio
 import requests
 from bs4 import BeautifulSoup
 import time
+from shuttleai import *
 # from models import News
 # from django.http import JsonResponse
 
@@ -17,24 +18,25 @@ from g4f.Provider import (
 
 # Сделаю ветку с django которая не работает друзья
 
-news_limit = 7
+news_limit = 5
+SHUTTLE_KEY = "shuttle-rkxlqhwgdbjug0jcidvf"
 
 prompt = """На русском языке:
-    1) Опишите заголовок события, обращая внимание на ключевые аспекты и исключая дополнительные детали.
-    2) Укажите только место события: только существующий город (при наличии), улица (при наличии), дом (при наличии), и исключите излишние локационные детали, не включать в адрес тип местности (поле, лес). (Все события происходят в Нижегородской области, по умолчанию адрес Нижний Новгород)
-    3) Переформулируйте информацию, предоставив более точный контекст и избегая лишних эмоциональных вставок.
+        Укажите только место события: только существующий город, улица, дом, и исключите излишние локационные детали. Если адрес за пределами Нижегородской области, то ставить Нижний Новгород без других указаний места.
     """
 
 async def parsing_func(input_text):
-    response = await g4f.ChatCompletion.create_async(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt + input_text}],
-        # stream=True,
-    )
-    output_text = ""
-    for msg in response:
-        output_text += msg
-    return output_text
+    async with ShuttleAsyncClient(SHUTTLE_KEY, timeout=60) as shuttle:
+        response = await shuttle.chat_completion(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": input_text + prompt}],
+            stream=False,
+            plain=False,
+            internet=False,
+            max_tokens=100,
+            temperature=0.5,
+        )
+        return response['choices'][0]['message']['content']
 
 
 def get_after_find(article, par1, par2):
@@ -99,7 +101,7 @@ async def nnru():
         rubrics = article.find_all(attrs={"slot": "rubrics"})
         city_news = False
         for r in rubrics:
-            if r['title'] == 'Город':
+            if r['title'] == 'Город' or r['title'] == 'Дороги и транспорт':
                 city_news = True
 
         if not city_news:
@@ -120,11 +122,10 @@ async def nnru():
         if news_data.find('div', {'class': 'qQq9J'}) is not None:
             text += ". " + news_data.find('div', {'class': 'qQq9J'}).get_text(strip=True)
 
-        post = await parsing_func(text)
-        lines = post.split('\n')
-        place = lines[1][18:]
+        place = await parsing_func(text)
 
         print(title, '\n', text, '\n', date, '\n', place, '\n', url, '\n', img, '\n\n\n')
+        time.sleep(10)
         #pass_news(0, title, '', date, '', url, img)
 
 async def rbc():
@@ -145,16 +146,15 @@ async def rbc():
         if news_data.find('div', {'class': 'article__text__overview'}) is not None:
             text = news_data.find('div', {'class': 'article__text__overview'}).get_text(strip=True)
 
-        post = await parsing_func(text)
-        lines = post.split('\n')
-        place = lines[1][18:]
+        place = await parsing_func(text)
 
         print(title, '\n', text, '\n', date, '\n', place, '\n', url, '\n', img, '\n\n\n')
+        time.sleep(10)
         # pass_news(0, title, '', date, '', url, img)
 
 while True:
     print("NN.RU:\n")
     asyncio.run(nnru())
-    #print("RBC:\n")
-    #asyncio.run(rbc())
-    time.sleep(300)
+    print("RBC:\n")
+    asyncio.run(rbc())
+    time.sleep(600)
