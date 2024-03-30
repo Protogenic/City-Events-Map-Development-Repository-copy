@@ -1,7 +1,8 @@
+import base64
 import json
 from datetime import datetime
 from telethon import TelegramClient, events
-from internal.function import response_to_server, filter_func, SummarizeAiFunc
+from internal.function import response_to_server, filter_func, SummarizeAiFunc, convertImageToDataUri
 
 
 def telegram_grabber(session, api_id, api_hash, loop=None, tg_channels=None):
@@ -23,12 +24,17 @@ def telegram_grabber(session, api_id, api_hash, loop=None, tg_channels=None):
         data['img'] = None
         time = datetime.now().strftime("%Y-%m-%d")
         data['news_date'] = time
-        blob = None
+        time = datetime.now().strftime("%d-%m-%Y%H-%M-%S")
+        path = f"images/img+{time}"
         if event.message.photo:
-            blob = await event.download_media(bytes)
-        print(blob)
+            await event.download_media(path)
+        imt = ""
+        with open(path+".jpg", "rb") as file:
+            image_data = file.read()
+            img = base64.b64encode(image_data).decode('utf-8')
+        data['img'] = img
         print(data)
-        # response_to_server(data)
+       ## response_to_server(data)
         ##send_message_func(data)
 
     return client
