@@ -1,3 +1,5 @@
+import base64
+
 import requests
 from shuttleai import ShuttleAsyncClient
 from requests.auth import HTTPBasicAuth
@@ -29,6 +31,11 @@ def filter_func(string):
         "бесплат",
         "кешбек",
         " мы "
+        "Телеграмм"
+        "работаем"
+        "кто"
+        "своё"
+        "билеты"
     ]
     for word in words:
         for key in key_words:
@@ -40,10 +47,6 @@ def filter_func(string):
 auth = HTTPBasicAuth('admin', 'admin')
 
 
-
-
-
 def response_to_server(post):
     response_post = requests.post(url='https://api.in-map.ru/api/news/', json=post, auth=auth)
     print("POST-запрос:", response_post.json())
-
