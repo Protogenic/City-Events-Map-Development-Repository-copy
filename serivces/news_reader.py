@@ -13,7 +13,7 @@ from internal.function import response_to_server, filter_func, SummarizeAiFunc
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Django_config.settings")
 
-news_limit = 2
+news_limit = 9
 
 
 def get_after_find(article, par1, par2):
@@ -47,13 +47,21 @@ def download_image(url, save_path):
         return None
 
 
-async def send_json(img, text, url, date):
+async def send_json(img, text, url):
+    today = datetime.today()
+    date = today.strftime('%Y-%m-%d')
+
+    img_path = "images/" + os.path.basename(img)
+    download_image(img, img_path)
+    with open(img_path, "rb") as file:
+        image_data = file.read()
+        img = base64.b64encode(image_data).decode('utf-8')
+
     post = await SummarizeAiFunc(text)
     data = json.loads(post)
     data['url'] = url
     data['img'] = img
     data['news_date'] = date
-    print("query")
     response_to_server(data)
 
 
@@ -79,7 +87,6 @@ async def nnru():
         if tag:
             title = tag.a['title']
 
-        date = get_after_find(article, 'time', 'datetime')
         url = 'https://www.nn.ru/' + article.a['href']
         img = get_after_find(article, 'img', 'src')
 
@@ -89,7 +96,7 @@ async def nnru():
         if news_data.find('div', {'class': 'qQq9J'}) is not None:
             text += ". " + news_data.find('div', {'class': 'qQq9J'}).get_text(strip=True)
 
-        await send_json(img, text, url, date)
+        await send_json(img, text, url)
 
 
 month_names = {
@@ -124,19 +131,11 @@ async def rbc():
         if news_data.find('div', {'class': 'article__text__overview'}) is not None:
             text = news_data.find('div', {'class': 'article__text__overview'}).get_text(strip=True)
 
-        today = datetime.today()
-        date = today.strftime('%Y-%m-%d')
-
-        img_path = "images/" + os.path.basename(img)
-        download_image(img, img_path)
-        with open(img_path, "rb") as file:
-            image_data = file.read()
-            img = base64.b64encode(image_data).decode('utf-8')
-        await send_json(img, text, url, date)
+        await send_json(img, text, url)
 
 
 def run():
     print("NN.RU:\n")
     asyncio.run(nnru())
     print("RBC:\n")
-    asyncio.run(rbc())
+    #asyncio.run(rbc())
