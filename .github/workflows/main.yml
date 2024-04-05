@@ -22,8 +22,8 @@ jobs:
 
       - name: Test
         run: |
-          python main.py response_to_server
-          python main.py download_image
-          python main.py check_response
-          python main.py rbc
-          python main.py nnru
+          python news_reader.py response_to_server
+          python news_reader.py download_image
+          python news_reader.py check_response
+          python news_reader.py rbc
+          python news_reader.py nnru
