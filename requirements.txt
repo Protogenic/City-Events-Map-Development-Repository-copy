@@ -1,1 +1,7 @@
-telethon
+asyncio
+base64
+requests
+time
+json
+datetime
+BeautifulSoup
